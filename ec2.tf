@@ -8,3 +8,15 @@ resource "aws_instance" "ami" {
 }
 
 
+resource "null_resource" "ansible-apply" {
+  provisioner "remote-exec" {
+    connection {
+      host     = aws_instance.ami.private_ip
+      user     = jsondecode(data.aws_secretsmanager_secret_version.latest.secret_string)["SSH_USER"]
+      password = jsondecode(data.aws_secretsmanager_secret_version.latest.secret_string)["SSH_PASS"]
+    }
+    inline = [
+      "ansible-pull -U https://github.com/raghudevopsb62/ansible roboshop-pull.yml -e COMPONENT=mongodb -e ENV=${var.ENV}"
+    ]
+  }
+}
